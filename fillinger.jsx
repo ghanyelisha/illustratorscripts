@@ -51,61 +51,25 @@ else {
         globalGroup.orientation = 'column';
         globalGroup.alignChildren = ['fill', 'fill'];
 
-    var sizePanel = globalGroup.add('panel', undefined, 'Items size in % of total size'),
+    var sizePanel = globalGroup.add('panel', undefined, 'Item Size Settings'),
         sizeGroup = sizePanel.add('group');
     sizePanel.alignChildren = 'fill';
-    sizeGroup.orientation = 'row';
+    sizeGroup.orientation = 'column';
     sizeGroup.alignChildren = ['fill', 'fill'];
 
-    var maxValueGroup = sizeGroup.add('group');
-        maxValueGroup.orientation = 'row';
-        maxValueGroup.alignChildren = 'fill';
-    var maxValueLabel = maxValueGroup.add('statictext', undefined, 'Max:'),
-        maxValue = maxValueGroup.add('edittext', [0, 0, 50, 25], '10');
-        maxValueLabel.justify = 'center';
+    var itemSizeGroup = sizeGroup.add('group');
+        itemSizeGroup.orientation = 'row';
+        itemSizeGroup.alignChildren = ['fill', 'fill'];
+    var itemSizeLabel = itemSizeGroup.add('statictext', undefined, 'Item Size (% of artboard):'),
+        itemSizeValue = itemSizeGroup.add('edittext', [0, 0, 60, 25], '10');
+        itemSizeValue.addEventListener('keydown', function (e) { inputNumberEvents(e, this, 1, Infinity); });
 
-    var minValueGroup = sizeGroup.add('group');
-        minValueGroup.orientation = 'row';
-        minValueGroup.alignChildren = 'fill';
-    var minValueLabel = minValueGroup.add('statictext', undefined, 'Min:'),
-        minValue = minValueGroup.add('edittext', [0, 0, 50, 25], '4');
-        minValueLabel.justify = 'center';
-
-    function checkMnMaxSize (val, item, min, max) {
-        if (item === minValue) {
-            if (val > parseFloat(maxValue.text)) { maxValue.text = (val >= max ? max : val); }
-        }
-            else if (item === maxValue) {
-                if (val < parseFloat(minValue.text)) { minValue.text = (val < min ? min : val); }
-            }
-
-    }
-    maxValue.addEventListener('keydown', function (e) {
-        if (e.ctrlKey && e.keyName === 'Right') minValue.text = this.text;
-            else inputNumberEvents(e, maxValue, 1, Infinity, checkMnMaxSize);
-    });
-    minValue.addEventListener('keydown', function (e) {
-        if (e.ctrlKey && e.keyName === 'Left') maxValue.text = this.text;
-            else inputNumberEvents(e, minValue, 1, Infinity, checkMnMaxSize);
-    });
-
-    var guttersResizeGroup = sizePanel.add('group');
-        guttersResizeGroup.orientation = 'row';
-        guttersResizeGroup.alignChildren = ['fill', 'fill'];
-
-    var guttersGroup = guttersResizeGroup.add('group');
-        guttersGroup.orientation = 'column';
-        guttersGroup.alignChildren = 'fill';
-    var guttersLabel = guttersGroup.add('statictext', undefined, 'Min distance')
-        guttersValue = guttersGroup.add('edittext', undefined, '0');
-        guttersValue.addEventListener('keydown', function (e) { inputNumberEvents(e, this, 0, Infinity); });
-
-    var resizeGroup = guttersResizeGroup.add('group');
-        resizeGroup.orientation = 'column';
-        resizeGroup.alignChildren = 'fill';
-    var resizeLabel = resizeGroup.add('statictext', undefined, 'Resize value')
-        resizeValue = resizeGroup.add('edittext', undefined, '70');
-        resizeValue.addEventListener('keydown', function (e) { inputNumberEvents(e, this, 10, Infinity); });
+    var spacingGroup = sizeGroup.add('group');
+        spacingGroup.orientation = 'row';
+        spacingGroup.alignChildren = ['fill', 'fill'];
+    var spacingLabel = spacingGroup.add('statictext', undefined, 'Spacing (pixels):'),
+        spacingValue = spacingGroup.add('edittext', [0, 0, 60, 25], '0');
+        spacingValue.addEventListener('keydown', function (e) { inputNumberEvents(e, this, 0, Infinity); });
 
     var rotatePositionGroup = globalGroup.add('group');
         rotatePositionGroup.orientation = 'row';
@@ -170,15 +134,13 @@ else {
         globalGroup.enabled = false;
 
         var __rotateValue = Number(rotateValue.text);
-        maxCircleSize = Number(maxValue.text);
-        if (maxCircleSize < 0.01 || maxCircleSize > 100){maxCircleSize = 20;}
-        minCircleSize = Number(minValue.text);
-        if (minCircleSize < 0.01 || minCircleSize > maxCircleSize){minCircleSize = maxCircleSize/2;}
-        maxCircleSize /= 100;
-        minCircleSize /= 100;
-        maxCircleSize /= 2;
-        minCircleSize /= 2;
-        minDistanceToOtherCircles = Number(guttersValue.text);
+        var itemSize = Number(itemSizeValue.text);
+        var spacingPixels = Number(spacingValue.text);
+        
+        if (itemSize < 0.01 || itemSize > 100) { itemSize = 10; }
+        if (spacingPixels < 0) { spacingPixels = 0; }
+        
+        minDistanceToOtherCircles = spacingPixels;
         var items = selection.concat();
         if (!objectPosLayers.value) items.sort(function (a, b) {
             return a.geometricBounds[1] <= b.geometricBounds[1];
@@ -195,9 +157,9 @@ else {
         if (!placeObject.length) {
             return alert('No items to fill!');
         }
-        var placeObjectResizeValue = (isNaN(parseFloat(resizeValue.text)) ? parseFloat(resizeValue.text) : 70),
+        var placeObjectResizeValue = 100,
             innerpaths = [],
-            outerPath = null
+            outerPath = null,
             groupItems = (groupResult.value ? activeDocument.groupItems.add() : false);
 
         if (groupItems) groupItems.move(object, ElementPlacement.PLACEBEFORE);
@@ -268,15 +230,16 @@ else {
             circleList = [];
             radiiList = [ ];
             
-            // Fixed uniform size calculation
+            // Fixed uniform size calculation based on item size percentage
             maxsize = Math.sqrt(maxwide * maxhigh);
-            uniformRadius = (maxCircleSize * maxsize);
-            spacing = uniformRadius * 2 + minDistanceToOtherCircles;
+            var itemSizePercentage = itemSize / 100;
+            uniformRadius = (itemSizePercentage * maxsize);
+            spacing = uniformRadius + minDistanceToOtherCircles;
             
             // Generate grid-based points in linear/pixelated manner
             var gridPoints = [];
-            for (var gx = minx + uniformRadius + spacing; gx < maxx - uniformRadius; gx += spacing) {
-                for (var gy = miny + uniformRadius + spacing; gy < maxy - uniformRadius; gy += spacing) {
+            for (var gx = minx + uniformRadius; gx < maxx - uniformRadius; gx += spacing) {
+                for (var gy = miny + uniformRadius; gy < maxy - uniformRadius; gy += spacing) {
                     gridPoints.push([gx, gy]);
                 }
             }
@@ -300,24 +263,28 @@ else {
                 }
             }
             
+            if (pointList.length === 0) {
+                alert('No valid points found to fill the shape. Try adjusting the item size or spacing.');
+                return;
+            }
+            
             progressBarCounter = progressBar.maxvalue * 0.75 / pointList.length;
             progressBar.value += progressBarCounter * 0.25;
             win.update();
             
             for (p=0; p<pointList.length; p++){
                 pt = pointList[p];
-                nrad = circleList[p]; // Use the fixed uniform radius
+                var itemSize_actual = circleList[p]; // This is the uniform size
                 var __placeObject = getNode().duplicate(),
                     placeObjectSize = (__placeObject.width >= __placeObject.height ? 'width' : 'height'),
                     placeObjectSizeReverse = (placeObjectSize === 'width' ? 'height' : 'width'),
-                    __radius = 2 * nrad,
-                    __size = __radius * (placeObjectResizeValue / 100);
-                    __ratio = __size * 100 / __placeObject[placeObjectSize] / 100;
+                    __size = itemSize_actual * (placeObjectResizeValue / 100);
+                    __ratio = __size / __placeObject[placeObjectSize];
 
                  __placeObject.move(groupResult.value ? groupItems : object, ElementPlacement[groupResult.value ? 'INSIDE' : 'PLACEBEFORE']);
                 __placeObject[placeObjectSize] = __size;
                 __placeObject[placeObjectSizeReverse] *= __ratio;
-                __placeObject.position = [pt[0]-nrad + ((__radius - __placeObject.width) / 2), pt[1]+nrad - ((__radius - __placeObject.height) / 2)];
+                __placeObject.position = [pt[0] - (__placeObject.width / 2), pt[1] - (__placeObject.height / 2)];
                 if (randomRotate.value) __placeObject.rotate(Math.floor(Math.random() * 360));
                     else if (rotateByValue.value && __rotateValue) __placeObject.rotate(__rotateValue);
 
@@ -349,10 +316,8 @@ else {
     function saveSettings() {
         var $file = new File(settingFile.folder + settingFile.name),
             data = [
-                maxValue.text,
-                minValue.text,
-                guttersValue.text,
-                resizeValue.text,
+                itemSizeValue.text,
+                spacingValue.text,
                 rotateValue.text,
                 randomRotate.value,
                 rotateByValue.value,
@@ -376,19 +341,17 @@ else {
                 $file.open('r');
                 var data = $file.read().split('\n'),
                     $main = data[0].split(',');
-                maxValue.text = $main[0];
-                minValue.text = $main[1];
-                guttersValue.text = $main[2];
-                resizeValue.text = $main[3];
-                rotateValue.text = $main[4];
-                randomRotate.value = ($main[5] === 'true');
-                rotateByValue.value = ($main[6] === 'true');
-                objectPosTop.value = ($main[7] === 'true');
-                objectPosBottom.value = ($main[8] === 'true');
-                objectPosLayers.value = ($main[9] === 'true');
-                randomItems.value = ($main[10] === 'true');
-                removeTopElement.value = ($main[11] === 'true');
-                groupResult.value = ($main[12] === 'true');
+                itemSizeValue.text = $main[0];
+                spacingValue.text = $main[1];
+                rotateValue.text = $main[2];
+                randomRotate.value = ($main[3] === 'true');
+                rotateByValue.value = ($main[4] === 'true');
+                objectPosTop.value = ($main[5] === 'true');
+                objectPosBottom.value = ($main[6] === 'true');
+                objectPosLayers.value = ($main[7] === 'true');
+                randomItems.value = ($main[8] === 'true');
+                removeTopElement.value = ($main[9] === 'true');
+                groupResult.value = ($main[10] === 'true');
     
                 rotateValue.enabled = !randomRotate.value;
             } catch (e) {}
