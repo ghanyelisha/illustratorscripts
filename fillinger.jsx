@@ -2,12 +2,12 @@
 
   Author: A Jongware Script (Circle fill)
   Program version: Adobe Illustrator CC+
-  Name: fillOutlineWithShapes.jsx;
+  Name: fillinger.jsx;
 
-  Modify and refactoring: Ghany Elisha
-  www.ghanyelisha.framer.site
+  Modify and refactoring: Alexander Ladygin
+  www.ladyginpro.ru
 
-  Copyright (c) 2026
+  Copyright (c) 2018
 
 */
 if (app.documents.length && app.selection.length < 2) {
@@ -25,11 +25,11 @@ else {
             _dir = ev.keyName.toLowerCase().slice(0,1),
             _value = parseFloat(_input.text),
             units = (',px,pt,mm,cm,in,'.indexOf(_input.text.length > 2 ? (',' + _input.text.replace(/ /g, '').slice(-2) + ',') : ',!,') > -1 ? _input.text.replace(/ /g, '').slice(-2) : '');
-
+    
         min = (min === undefined ? 0 : min);
         max = (max === undefined ? Infinity : max);
         step = (ev.shiftKey ? 10 : (ev.ctrlKey ? .1 : 1));
-
+    
         if (isNaN(_value)) {
             _input.text = min;
         }
@@ -43,7 +43,7 @@ else {
             }
     }
 
-    var win = new Window('dialog', 'fillOutlineWithShapes by Ghany Elisha');
+    var win = new Window('dialog', 'Fillinger \u00A9 www.ladyginpro.ru');
     win.orientation = 'column';
     win.alignChildren = ['fill', 'fill'];
 
@@ -134,7 +134,7 @@ else {
     var groupResult = globalGroup.add('checkbox', undefined, 'Group all items after executing'),
         randomItems = globalGroup.add('checkbox', undefined, 'Random items (if items in the group)'),
         removeTopElement = globalGroup.add('checkbox', undefined, 'Remove the item to fill after executing');
-
+    
     var winButtons = globalGroup.add('group');
         winButtons.orientation = 'row';
         winButtons.alignChildren = ['fill', 'fill'];
@@ -267,62 +267,46 @@ else {
             pointList = [];
             circleList = [];
             radiiList = [ ];
+            
+            // Fixed uniform size calculation
             maxsize = Math.sqrt(maxwide * maxhigh);
-            size = maxCircleSize;
-            while (1){
-                radiiList.push (size*maxsize);
-                size *= .667;
-                if (size < minCircleSize){break;}
-            }
-            progressBarCounter = progressBar.maxvalue * 0.25 / radiiList.length;
-            for (rad=0; rad<radiiList.length; rad++){
-                for (p=0; p<1000; p++){
-                    a_rnd = Math.random() * triArea;
-                    for (q=0; q<triangleList.length; q++) {
-                        if (areaList[q] > a_rnd) {break;}
-                    }
-
-                    pt = getRandomPoint (triangleList[q]);
-                    d = distanceToClosestEdge (pt, edgeList);
-                    if (d >= radiiList[rad]){
-                        for (c=0; c<pointList.length; c++){
-                            xd = Math.abs (pt[0]-pointList[c][0]);
-                            yd = Math.abs (pt[1]-pointList[c][1]);
-                            if (xd <= radiiList[rad]+circleList[c]+minDistanceToOtherCircles &&
-                                yd <= radiiList[rad]+circleList[c]+minDistanceToOtherCircles){
-                                d = distanceFromPointToPoint (pt, pointList[c])-minDistanceToOtherCircles;
-                                if (d < radiiList[rad]+circleList[c])
-                                    break;
-                            }
-                        }
-                        if (c == pointList.length){
-                            nrad = radiiList[rad];
-                            pointList.push ( pt );
-                            circleList.push (nrad);
-                        }
-                    } 
+            uniformRadius = (maxCircleSize * maxsize);
+            spacing = uniformRadius * 2 + minDistanceToOtherCircles;
+            
+            // Generate grid-based points in linear/pixelated manner
+            var gridPoints = [];
+            for (var gx = minx + uniformRadius + spacing; gx < maxx - uniformRadius; gx += spacing) {
+                for (var gy = miny + uniformRadius + spacing; gy < maxy - uniformRadius; gy += spacing) {
+                    gridPoints.push([gx, gy]);
                 }
-                progressBar.value += progressBarCounter;
-                win.update();
             }
+            
+            // Filter points to only those inside the shape
+            for (var gp = 0; gp < gridPoints.length; gp++) {
+                var testPt = gridPoints[gp];
+                var isInside = pointInsidePoly(testPt, outerPath);
+                var isOutsideHole = true;
+                
+                for (var ih = 0; ih < innerpaths.length; ih++) {
+                    if (pointInsidePoly(testPt, innerpaths[ih])) {
+                        isOutsideHole = false;
+                        break;
+                    }
+                }
+                
+                if (isInside && isOutsideHole) {
+                    pointList.push(testPt);
+                    circleList.push(uniformRadius);
+                }
+            }
+            
             progressBarCounter = progressBar.maxvalue * 0.75 / pointList.length;
+            progressBar.value += progressBarCounter * 0.25;
+            win.update();
+            
             for (p=0; p<pointList.length; p++){
                 pt = pointList[p];
-                nrad = distanceToClosestEdge (pt, edgeList);
-                for (c=0; c<pointList.length; c++){
-                    if (c == p)
-                        continue;
-                    xd = Math.abs (pt[0]-pointList[c][0]);
-                    yd = Math.abs (pt[1]-pointList[c][1]);
-                    if (xd <= nrad+circleList[c]+minDistanceToOtherCircles &&
-                        yd <= nrad+circleList[c]+minDistanceToOtherCircles)
-                    {
-                        nd = distanceFromPointToPoint (pt, pointList[c])-circleList[c]-minDistanceToOtherCircles;
-                        if (nd < nrad)
-                            nrad = nd;
-                    }
-                }
-                circleList[p] = nrad;
+                nrad = circleList[p]; // Use the fixed uniform radius
                 var __placeObject = getNode().duplicate(),
                     placeObjectSize = (__placeObject.width >= __placeObject.height ? 'width' : 'height'),
                     placeObjectSizeReverse = (placeObjectSize === 'width' ? 'height' : 'width'),
@@ -379,12 +363,12 @@ else {
                 removeTopElement.value,
                 groupResult.value
             ].toString();
-
+    
         $file.open('w');
         $file.write(data);
         $file.close();
     }
-
+    
     function loadSettings() {
         var $file = File(settingFile.folder + settingFile.name);
         if ($file.exists) {
@@ -405,7 +389,7 @@ else {
                 randomItems.value = ($main[10] === 'true');
                 removeTopElement.value = ($main[11] === 'true');
                 groupResult.value = ($main[12] === 'true');
-
+    
                 rotateValue.enabled = !randomRotate.value;
             } catch (e) {}
             $file.close();
