@@ -7,7 +7,7 @@
   Modify and refactoring: Alexander Ladygin
   www.ladyginpro.ru
 
-  Copyright (c) 2018
+  Copyright (c) 2026
 
 */
 if (app.documents.length && app.selection.length < 2) {

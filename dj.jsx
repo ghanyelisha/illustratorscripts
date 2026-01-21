@@ -7,7 +7,7 @@
   Modify and refactoring: Ghany Elisha
   www.ghanyelisha.framer.site
 
-  Copyright (c) 2025
+  Copyright (c) 2026
 
 */
 if (app.documents.length && app.selection.length < 2) {
