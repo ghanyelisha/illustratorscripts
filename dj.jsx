@@ -4,10 +4,10 @@
   Program version: Adobe Illustrator CC+
   Name: fillinger.jsx;
 
-  Modify and refactoring: Alexander Ladygin
-  www.ladyginpro.ru
+  Modify and refactoring: Ghany Elisha
+  www.ghanyelisha.framer.site
 
-  Copyright (c) 2018
+  Copyright (c) 2025
 
 */
 if (app.documents.length && app.selection.length < 2) {
