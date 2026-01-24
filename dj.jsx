@@ -1,6 +1,6 @@
 /* 
 
-  Author: A Jongware Script (Circle fill)
+  Author: A Jongware Script Refactored by Elisha
   Program version: Adobe Illustrator CC+
   Name: fillinger.jsx;
 
