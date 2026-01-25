@@ -43,7 +43,7 @@ else {
             }
     }
 
-    var win = new Window('dialog', 'Fillinger \u00A9 www.ladyginpro.ru');
+    var win = new Window('dialog', 'Fillinger by Ghany Elisha');
     win.orientation = 'column';
     win.alignChildren = ['fill', 'fill'];
 
