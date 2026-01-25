@@ -11,7 +11,7 @@
 
 */
 if (app.documents.length && app.selection.length < 2) {
-    alert('Please select 2 or more objects');
+    alert('Please select 2 or more objects from your artboard to use this script.');
 }
 else {
     var scriptName = 'Fillinger',
