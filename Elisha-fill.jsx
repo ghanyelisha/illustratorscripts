@@ -2,7 +2,7 @@
 
   Author: A Jongware Script Refactored by Elisha
   Program version: Adobe Illustrator CC+
-  Name: fillinger.jsx;
+  Name: Elisha-Fill.jsx;
 
   Modify and refactoring: Ghany Elisha
   Website: ghanyelisha.framer.site
