@@ -340,3 +340,46 @@ else {
         $file.close();
     }
     
+    function loadSettings() {
+        var $file = File(settingFile.folder + settingFile.name);
+        if ($file.exists) {
+            try {
+                $file.open('r');
+                var data = $file.read().split('\n'),
+                    $main = data[0].split(',');
+                maxValue.text = $main[0];
+                minValue.text = $main[1];
+                guttersValue.text = $main[2];
+                resizeValue.text = $main[3];
+                rotateValue.text = $main[4];
+                randomRotate.value = ($main[5] === 'true');
+                rotateByValue.value = ($main[6] === 'true');
+                objectPosTop.value = ($main[7] === 'true');
+                objectPosBottom.value = ($main[8] === 'true');
+                objectPosLayers.value = ($main[9] === 'true');
+                randomItems.value = ($main[10] === 'true');
+                removeTopElement.value = ($main[11] === 'true');
+                groupResult.value = ($main[12] === 'true');
+    
+                rotateValue.enabled = !randomRotate.value;
+            } catch (e) {}
+            $file.close();
+        }
+    }
+
+    win.onClose = function() {
+        saveSettings();
+        return true;
+    }
+
+    function checkSettingFolder() {
+        var $folder = new Folder(settingFile.folder);
+        if (!$folder.exists) $folder.create();
+    }
+
+    checkSettingFolder();
+    loadSettings();
+    win.center();
+    win.show();
+}
+
