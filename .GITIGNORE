@@ -1,2 +1,4 @@
 # Add your patterns here
 original-jsx.jsx
+*.log
+.DS_Store
