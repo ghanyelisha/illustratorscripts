@@ -233,8 +233,8 @@ else {
         else{
             minx = object.geometricBounds[0];
             miny = object.geometricBounds[1];
-            maxx = object.geometricBounds[2]
-            maxy = object.geometricBounds[3]
+            maxx = object.geometricBounds[2];
+            maxy = object.geometricBounds[3];
             if (minx > maxx){x = minx;minx = maxx;maxx = x;}
             if (miny > maxy){y = miny;miny = maxy;maxy = y;}
 
