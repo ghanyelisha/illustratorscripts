@@ -231,7 +231,7 @@ else {
         else {outerPath = flattenPath(object);}
         if (outerPath == null){alert ("Got a bad path. What's going on?");}
         else{
-            minx = object.geometricBounds[0];
+            minx = object.geometricBounds[0]
             miny = object.geometricBounds[1];
             maxx = object.geometricBounds[2];
             maxy = object.geometricBounds[3];
